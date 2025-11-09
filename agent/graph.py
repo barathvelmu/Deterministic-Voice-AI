@@ -103,14 +103,16 @@ def answerer(state: State) -> State:
         if not snippets:
             updates["draft_answer"] = "I couldn’t find anything solid on that topic. Try rephrasing it for me."
         else:
-            lines = []
+            summaries = []
             for s in snippets[:2]:
-                title = s.get("title", "(no title)")
                 summary = (s.get("summary") or "").replace("\n", " ")
                 if len(summary) > 400:
                     summary = summary[:397].rstrip() + "..."
-                lines.append(f"{title}: {summary}")
-            updates["draft_answer"] = "Here’s what I found.\n" + "\n".join(lines)
+                summaries.append(summary)
+            body = " ".join(filter(None, summaries)).strip()
+            if not body:
+                body = "I’m still looking for more details on that."
+            updates["draft_answer"] = f"Of course! {body}"
     
     # This part focuses on notes (task type 2)
     elif intent == "NOTES":
