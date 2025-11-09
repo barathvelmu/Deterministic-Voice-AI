@@ -9,7 +9,28 @@ from typing import Optional
 
 from openai import OpenAI
 
-SYSTEM_PROMPT = """You rewrite free-form voice transcripts into compact commands for a voice agent.\nReturn a JSON object with keys:\n  action: one of [\"search\", \"calculate\", \"add_note\", \"list_notes\", \"answer\"].\n  content: short string payload (may be empty for list_notes).\nRules:\n- Use action=\"search\" when the user asks to find, learn about, or research something. content should be the topic.\n- Use action=\"calculate\" for math questions. content should contain only the expression (numbers/operators).\n- Use action=\"add_note\" when the user wants to remember something. content is the note text.\n- Use action=\"list_notes\" when they want to hear existing notes.\n- Use action=\"answer\" for everything else. Keep content under 200 characters and conversational.\n- Never include explanations outside the JSON.\nExamples:\nInput: \"I really want to learn about Donald Trump today.\" -> {\"action\": \"search\", \"content\": \"Donald Trump\"}\nInput: \"Could you remind me to call mom tomorrow?\" -> {\"action\": \"add_note\", \"content\": \"call mom tomorrow\"}\nInput: \"How much is fourteen times nine?\" -> {\"action\": \"calculate\", \"content\": \"14 * 9\"}\nInput: \"What notes do I have saved?\" -> {\"action\": \"list_notes\", \"content\": \"\"}\nInput: \"Just wanted to say hi!\" -> {\"action\": \"answer\", \"content\": \"Hi there!\"}\n"""
+# at the top
+SYSTEM_PROMPT = """You rewrite messy spoken transcripts (full of fillers like "uh", "like", "you know") into compact commands for a voice agent.
+Return exactly one JSON object, using plain double quotes (valid JSON), with keys:
+  action: one of ["search", "calculate", "add_note", "list_notes", "answer"].
+  content: short string payload (may be empty for list_notes).
+Guidelines:
+- Strip filler words and focus on intent. ALWAYS prefer search/calculate/add_note/list_notes when feasible; use action="answer" only for true chit-chat.
+- action="search": user wants info/facts/news about something. content must be just the topic/title.
+- action="calculate": any math/comparison. Convert words to digits/operators when obvious (e.g., "fourteen times nine" -> "14 * 9").
+- action="add_note": whenever they mention events, todo items, reminders, appointments, “can you store/add/log this”, etc.—even if they never say “note”.
+- action="list_notes": user wants to hear what you saved (“what did I ask you to remember”, “what’s on my list”, “what reminders do I have”).
+- action="answer": fallback for small talk; respond naturally under 200 characters.
+- Never include markdown fences or extra commentary—return only the JSON object.
+Examples:
+Input: "I really want to learn about Donald Trump today." -> {"action": "search", "content": "Donald Trump"}
+Input: "Hey I actually have like a date tomorrow so yeah uh could you kinda store it?" -> {"action": "add_note", "content": "date tomorrow"}
+Input: "Could you remind me to call mom tomorrow?" -> {"action": "add_note", "content": "call mom tomorrow"}
+Input: "Oh btw I’ve got a football game Friday night, add that too." -> {"action": "add_note", "content": "football game Friday night"}
+Input: "When I solve one hundred fifty eight plus fifty six in my head I get five hundred, check me." -> {"action": "calculate", "content": "158 + 56"}
+Input: "What notes have I asked you to remember?" -> {"action": "list_notes", "content": ""}
+Input: "Just wanted to say hi!" -> {"action": "answer", "content": "Hi there!"}
+"""
 MODEL_ID = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
 _REFERER = os.getenv("OPENROUTER_SITE_URL", "")
 _TITLE = os.getenv("OPENROUTER_SITE_TITLE", "")

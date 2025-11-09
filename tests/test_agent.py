@@ -27,4 +27,4 @@ def test_add_and_list_notes(graph):
 def test_fallback_reply(graph):
     state = graph.invoke({"transcript": "just saying hi"})
     assert state["intent"] == "ANSWER"
-    assert state["answer"].startswith("You said")
+    assert state["answer"].startswith("I didn't")

@@ -149,7 +149,7 @@ def answerer(state: State) -> State:
     else:
         raw = state.get("transcript", "") or ""
         clean = raw.strip()
-        updates["draft_answer"] = f"You said “{clean}.”" if clean else "I didn’t catch that."
+        updates["draft_answer"] = f"I didn’t catch that."
 
     return updates
 
